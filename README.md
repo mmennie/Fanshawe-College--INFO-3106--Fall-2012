@@ -1,4 +1,6 @@
-Fanshawe-College--INFO-3106--Fall-2012
-======================================
+Fanshawe College: INFO-3106, LAMP 1
+-----------------------------------
 
-Introducing the paradigm of "social coding" and Source Control into IWD, LAMP 1, 2012. Sharing code examples, extra useful snippets for students, etc.
+Located here you will find code from in-class examples, useful snippets of code, etc.
+
+Did you know that this file, the README.md, is created using markdown syntax. Specific information about markdown syntax can be found at: [http://daringfireball.net/projects/markdown/syntax](http://daringfireball.net/projects/markdown/syntax).
