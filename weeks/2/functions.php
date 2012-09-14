@@ -36,9 +36,34 @@ function my_trim($str)
   return trim($str);
 }
 
+function print_array(array $array)
+{
+  /* if( !is_array($array) ) {
+    return;
+  } */
+
+  foreach( $array as $k => $v )
+  {
+    print_ln($v);
+  }
+}
+
 
 print_ln('First and foremost');
 
 print_ln('Hello World', true);
 
 print_ln(' Hello World from Foo Bar ... ');
+
+print '<br /><br />';
+
+$array = array('a' => 1, 'b' => 2, 'c' => 4, 'd' => 5, 1024 => 7);
+
+print_array($array);
+
+print '<br /><br />';
+
+print_array('hello world'); // demo of type hinting...
+
+print '<br /><br />';
+
