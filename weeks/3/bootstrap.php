@@ -9,5 +9,5 @@ require_once 'library/Object.php';
 
 /* Include shape files. No need to include Shape.php as it is included in these files */
 require_once 'library/shapes/Square.php';
-require_once 'library/shapes/Pentagon.php';
-require_once 'library/shapes/Triangle.php';
+// require_once 'library/shapes/Pentagon.php';
+// require_once 'library/shapes/Triangle.php';
