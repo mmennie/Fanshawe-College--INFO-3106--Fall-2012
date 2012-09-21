@@ -6,7 +6,7 @@
 ini_set('display_errors', 'on');
 error_reporting(E_ALL | E_STRICT);
 
-$fields = array('name' => '', 'email' => '@domain.com', 'phone' => '', 'message' => '');
+$fields = array('name' => '', 'email' => '@domain.com', 'phone' => '', 'message' => '', 'check' => '');
 $errors = array(); 
 $is_success = false;
  
@@ -15,7 +15,9 @@ if( isset($_POST['submit']) ) {
   $fields['name'] = isset($_POST['name']) ? stripslashes(trim($_POST['name'])) : $fields['name'];
   $fields['email'] = isset($_POST['email']) ? stripslashes(trim($_POST['email'])) : $fields['email'];
   $fields['phone'] = isset($_POST['phone']) ? stripslashes(trim($_POST['phone'])) : $fields['phone'];
-  $fields['message'] = isset($_POST['message']) ? stripslashes(trim($_POST['message'])) : $fields['message'];
+  $fields['message'] = isset($_POST['message']) ? strip_tags(stripslashes(trim($_POST['message']))) : $fields['message'];
+  
+  $fields['check'] = isset($_POST['check']) ?  : '';
   
   if( '' == $fields['name'] ) {
     $errors[] = 'The name field is required.';
@@ -72,7 +74,9 @@ if( isset($_POST['submit']) ) {
 
 <p><label for="phone">Phone:</label> <input type="text" name="phone" id="phone" value="<?php print $fields['phone']; ?>" maxlength="15" size="40" /></p>
 
-<p><label for="message">Message: *</label> <textarea name="message" id="message" cols="10" rows="10"><?php print $fields['message']; ?></textarea></p>
+<p><label for="message">Message: *</label> <textarea name="message" id="message" cols="60" rows="10"><?php print $fields['message']; ?></textarea></p>
+
+<p><input type="checkbox" name="check" value="1" id="check" /> <label for="check">Here is my checkbox</label></p>
 
 <p><input type="submit" name="submit" value="Submit" /></p>
 
