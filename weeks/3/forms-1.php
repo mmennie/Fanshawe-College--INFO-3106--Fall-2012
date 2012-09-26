@@ -17,7 +17,7 @@ if( isset($_POST['submit']) ) {
   $fields['phone'] = isset($_POST['phone']) ? stripslashes(trim($_POST['phone'])) : $fields['phone'];
   $fields['message'] = isset($_POST['message']) ? strip_tags(stripslashes(trim($_POST['message']))) : $fields['message'];
   
-  $fields['check'] = isset($_POST['check']) ?  : '';
+  $fields['check'] = isset($_POST['check']) ? 1 : '';
   
   if( '' == $fields['name'] ) {
     $errors[] = 'The name field is required.';
