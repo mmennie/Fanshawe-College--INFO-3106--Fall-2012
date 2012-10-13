@@ -26,7 +26,9 @@ namespace McGowan\Form
 		public function __construct(/* arguments here as well if you so wish */)
 		{
 			/* do any initializing required */
-			$this->_view = new FormView();
+			
+			
+			$this->$_view = new FormView();
 		}
 		
 	}
