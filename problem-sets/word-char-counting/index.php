@@ -11,21 +11,29 @@ error_reporting(E_ALL | E_STRICT);
  * @param int Contains the position of the character to split on
  * @return array Returns an array of the initial word split into pieces
  */
-function _string_count_words_parse_split($word, $offset, $ignore_lhs = false)
-{
+function _string_count_words_parse_pieces($piece, $offset) {
 	$return = array();
-	
-	if( !$ignore_lhs ) {
-		$return[] = substr($word, 0, $offset);
-	}
-	
-	$rhs = substr($word, $offset + 1, strlen($word));
-	for( $i = 0; $i < strlen($rhs); ++$i ) {
-		// if character is not valid ...
-		if( !_string_count_words_validate_char($rhs[$i]) ) {
-			$return[] = substr($rhs, 0, $i);
-			
-			$return = array_merge($return, _string_count_words_parse_split($rhs, $i, true));
+	$return[] = substr($piece, 0, $offset);
+
+	if( ($offset + 1) <= strlen($piece) ) {
+		$rhs = substr($piece, $offset + 1, strlen($piece));
+		
+		$has_split = false;
+		for( $i = 0; $i < strlen($rhs) && !$has_split; ++$i ) {
+			if( !_string_count_words_validate_char($rhs[$i]) ) {
+				if( ($i + 1) < strlen($rhs) ) {
+					$return = array_merge(
+						$return,
+						_string_count_words_parse_pieces($rhs, $i)
+					);
+				}
+				
+				$has_split = true;
+			}
+		}
+		
+		if( !$has_split ) {
+			$return[] = $rhs;
 		}
 	}
 	
@@ -50,35 +58,8 @@ function string_count_words($string) {
 		$has_split = false;
 		
 		for( $i = 0; $i < strlen($piece) && !$has_split; ++$i ) {
-			// w = 0
-			// o = 1
-			// 3 = 2
-			// r = 3
-			// l = 4
-			// d = 5
-			
-			// wo3rld
-			// ---> wo && rld
-			// ---> wo3rld
 			if( !_string_count_words_validate_char($piece[$i]) ) {
-				/* $lhs = substr($piece, 0, $i);
-				$words[] = $lhs;
-				
-				if( ($i + 1) < strlen($piece) ) {
-					$rhs = substr($piece, $i + 1, strlen($piece));
-					$words[] = $rhs;
-					
-				} */
-				
-				print __METHOD__ . '::' . __LINE__ . ' --> ' . $piece . ' --> ' . print_r(_string_count_words_parse_split($piece, $i), true) . '<br />';
-				
-				$words = array_merge($words,
-					_string_count_words_parse_split($piece, $i)
-				);
-				
-				
-				
-				
+				$words = array_merge($words, _string_count_words_parse_pieces($piece, $i));
 				$has_split = true;
 			}
 		}
@@ -87,8 +68,6 @@ function string_count_words($string) {
 			$words[] = $piece;
 		}
 	}
-	
-	print_r( $words );
 	
 	return count($words);
 }
@@ -126,8 +105,7 @@ print string_count_words("he3l4lo w1or2ld b6ye w4o!rl4d") . '<br />'; */
 
 
 
-
-print string_count_words("w4o!rl4d") . '<br />';
+print string_count_words("w4o!rl4dasdfasdf") . '<br />';
 
 
 
