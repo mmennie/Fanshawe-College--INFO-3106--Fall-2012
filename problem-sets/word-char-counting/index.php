@@ -123,7 +123,9 @@ if( isset($_POST['submit']) ) {
 	
 	.wrapper { width: 600px; margin-left: auto; margin-right: auto; margin-top: 30px; margin-bottom: 30px; background-color: #fff; border: 1px solid #e2e2e2; padding: 24px 24px; }
 	
-	.error-messages { background: #ff0000; padding: 5px 5px; color: #fff; }
+	.error-messages { background: #ff0000; padding: 5px 15px; color: #fff; }
+	
+	.success-messages { background: #000; padding: 5px 15px; color: #fff; }
 	</style>
 </head>
 <body>
@@ -140,6 +142,30 @@ if( isset($_POST['submit']) ) {
 		<h1>Counting</h1>
 	</header>
 	<section id="main">
+	<?php if( $form->success ) : ?>
+		
+		<div class="success-messages">
+			<p><?php print implode('</p><p>', $form->messages); ?></p>
+		</div>
+		<p>The total number of items counted was: ##</p>
+		<p>The total number of items counted while ignoring the ignored values was: ##</p>
+		<table width="99%" border="0" cellpadding="0" cellspacing="0">
+			<thead>
+				<tr>
+					<th width="75%">Ignored Value</th>
+					<th width="25%">Count</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>My ignored value here</td>
+					<td>123</td>
+				</tr>
+			</tbody>
+		</table>
+		<p><a href="index.php">&larr; Back</a></p>
+		
+	<?php else : ?>
 		<?php if( $form->has_error ) : ?>
 		<div class="error-messages">
 			<p><?php print implode('</p><p>', $form->messages); ?></p>
@@ -165,7 +191,7 @@ if( isset($_POST['submit']) ) {
 			<input type="submit" value="Submit" name="submit" />
 		</p>
 		</form>
-		
+	<?php endif; ?>	
 	</section>
 	<footer id="footer">
 		<p>Copyright information here.</p>
