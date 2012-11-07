@@ -91,17 +91,23 @@ if( isset($_POST['submit']) ) {
 	$form->fields['data'] = isset($_POST['data']) ? stripslashes(strip_tags(trim($_POST['data']))) : '';
 	$form->fields['ignore'] = isset($_POST['ignore']) ? stripslashes(strip_tags(trim($_POST['ignore']))) : '';
 
-	if( 'word' != $form->fields['op'] || 'char' != $form->fields['op'] ) {
+	if( 'words' != $form->fields['op'] && 'chars' != $form->fields['op'] ) {
 		$form->has_error = true;
 		$form->messages[] = 'An invalid operation was selected.';
 	}
 	
-	if( !empty($form->fields['data']) ) {
+	if( empty($form->fields['data']) ) {
 		$form->has_error = true;
 		$form->messages[] = 'The data field cannot be empty as it is required.';
 	}
-
-	/* do submission processing here ... */
+	
+	if( !$form->has_error )
+	{
+		/* do submission processing here ... */
+		
+		$form->success = true;
+		$form->messages[] = 'Congrats! You have successfully submitted this form.';
+	}
 }
 
 ?>
@@ -117,31 +123,43 @@ if( isset($_POST['submit']) ) {
 	
 	.wrapper { width: 600px; margin-left: auto; margin-right: auto; margin-top: 30px; margin-bottom: 30px; background-color: #fff; border: 1px solid #e2e2e2; padding: 24px 24px; }
 	
+	.error-messages { background: #ff0000; padding: 5px 5px; color: #fff; }
 	</style>
 </head>
 <body>
 
-<div class="wrapper">
+	<div class="post-array" style="border: 1px solid #000; padding: 10px 10px; margin: 15px 0px;">
+		<?php print_r( $_POST ); ?>
+	</div>
+	<div class="form-object" style="border: 1px solid #000; padding: 10px 10px; margin: 15px 0px;">
+		<?php print_r( $form ); ?>
+	</div>
 
+<div class="wrapper">
 	<header id="header">
 		<h1>Counting</h1>
 	</header>
 	<section id="main">
-		
+		<?php if( $form->has_error ) : ?>
+		<div class="error-messages">
+			<p><?php print implode('</p><p>', $form->messages); ?></p>
+		</div>
+		<?php endif; ?>
 		<form action="index.php" method="post">
 		<p>
 			<label for="ops">Operation Method: *</label>
 			<select name="op" id="ops">
-				<option value="words">Word Counting</option>
+				<option value="words"<?php print 'words' == $form->fields['op'] ? ' selected="selected"' : ''; ?>>Word Counting</option>
+				<option value="chars"<?php print 'chars' == $form->fields['op'] ? ' selected="selected"' : ''; ?>>Character Counting</option>
 			</select>
 		</p>
 		<p>
 			<label for="data">String: *</label>
-			<textarea id="data" name="data" cols="12" rows="8" style="width: 95%;"></textarea>
+			<textarea id="data" name="data" cols="12" rows="8" style="width: 95%;"><?php print $form->fields['data']; ?></textarea>
 		</p>
 		<p>
 			<label for="ignore">Ignore:</label>
-			<input type="text" name="ignore" id="ignored" value="" />
+			<input type="text" name="ignore" id="ignored" value="<?php print $form->fields['ignore']; ?>" />
 		</p>
 		<p>
 			<input type="submit" value="Submit" name="submit" />
