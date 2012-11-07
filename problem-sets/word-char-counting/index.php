@@ -50,8 +50,6 @@ function string_count_words($string) {
 	}
 	
 	$pieces = explode(' ', $string);
-	// string = "hello wo3rld bye world";
-	// pieces = "hello" ... "wo" ... "rld" ... "bye" ... "world"
 	$words = array();
 	foreach( $pieces as $piece ) {
 		$is_valid = true;
@@ -72,40 +70,96 @@ function string_count_words($string) {
 	return count($words);
 }
 
-
-/*
-
-print string_count_words("hello world") . '<br />';
-
+/* print string_count_words("hello world") . '<br />';
 print string_count_words("hello world bye world") . '<br />';
-
 print string_count_words("hello wo3rld") . '<br />';
-
 print string_count_words("hello world, bye wor,ld") . '<br />';
+print string_count_words("he3l4lo w1or2ld b6ye w4o!rl4d") . '<br />';
+print string_count_words("w4o!rl4dasdfasdf") . '<br />'; */
+
+$form = (object) array(
+	'has_error' => false,
+	'success' => false,
+	'messages' => array(),
+	
+	'fields' => array('op' => 'word', 'data' => '', 'ignore' => '')
+);
+
+if( isset($_POST['submit']) ) {
+	
+	$form->fields['op'] = isset($_POST['op']) ? stripslashes(trim($_POST['op'])) : '';
+	$form->fields['data'] = isset($_POST['data']) ? stripslashes(strip_tags(trim($_POST['data']))) : '';
+	$form->fields['ignore'] = isset($_POST['ignore']) ? stripslashes(strip_tags(trim($_POST['ignore']))) : '';
+
+	if( 'word' != $form->fields['op'] || 'char' != $form->fields['op'] ) {
+		$form->has_error = true;
+		$form->messages[] = 'An invalid operation was selected.';
+	}
+	
+	if( !empty($form->fields['data']) ) {
+		$form->has_error = true;
+		$form->messages[] = 'The data field cannot be empty as it is required.';
+	}
+
+	/* do submission processing here ... */
+}
+
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Word and Character Counting</title>
+	<style>
+	html { background-color: #f2f2f2; font-family: "Helvetica", Arial, sans-serif; font-size: 13px; color: #333; }
+	
+	h1 { margin: 0px 0px; }
+	label { display: block; font-weight: bold; }
+	
+	.wrapper { width: 600px; margin-left: auto; margin-right: auto; margin-top: 30px; margin-bottom: 30px; background-color: #fff; border: 1px solid #e2e2e2; padding: 24px 24px; }
+	
+	</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+	<header id="header">
+		<h1>Counting</h1>
+	</header>
+	<section id="main">
+		
+		<form action="index.php" method="post">
+		<p>
+			<label for="ops">Operation Method: *</label>
+			<select name="op" id="ops">
+				<option value="words">Word Counting</option>
+			</select>
+		</p>
+		<p>
+			<label for="data">String: *</label>
+			<textarea id="data" name="data" cols="12" rows="8" style="width: 95%;"></textarea>
+		</p>
+		<p>
+			<label for="ignore">Ignore:</label>
+			<input type="text" name="ignore" id="ignored" value="" />
+		</p>
+		<p>
+			<input type="submit" value="Submit" name="submit" />
+		</p>
+		</form>
+		
+	</section>
+	<footer id="footer">
+		<p>Copyright information here.</p>
+	</footer>
+
+</div>
+
+</body>
+</html>
 
 
-print string_count_words("he3l4lo w1or2ld b6ye w4o!rl4d") . '<br />'; */
-// HOMEWORK: SOLVE THIS USE CASE WITH MULTIPLE
-// NON-ALPHA CHARS IN A PIECE
-//
-// Example words to be counted in last print
-// he
-// l
-// lo
-// w
-// or
-// ld
-// b
-// ye
-// w
-// o
-// rl
-// d
 
-
-
-
-print string_count_words("w4o!rl4dasdfasdf") . '<br />';
 
 
 
