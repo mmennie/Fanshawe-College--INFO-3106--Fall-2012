@@ -64,6 +64,11 @@ function _string_count_words_validate_char($char) {
 	return !empty($char) && !(!ctype_alpha($char) && ("'" != $char || '-' != $char));
 }
 
+function _string_count_words_sanitize_piece($value) {
+	$value = trim($value);
+	return empty($value) ? null : $value;
+}
+
 function string_count_words($string, array $ignore = array(), $return_array = false) {
 	if( !is_string($string) ) {
 		throw new Exception('$string parameter must be of type string.');
@@ -82,6 +87,13 @@ function string_count_words($string, array $ignore = array(), $return_array = fa
 	}
 	
 	$pieces = explode(' ', $string);
+	for( $i = 0, $pieces_size = count($pieces); $i < $pieces_size; ++$i ) {
+		$pieces[$i] = _string_count_words_sanitize_piece($pieces[$i]);
+		if( null === $pieces[$i] ) {
+			unset($pieces[$i]);
+		}
+	}
+	
 	$words = array();
 	foreach( $pieces as $piece ) {
 		$is_valid = true;
@@ -150,10 +162,10 @@ if( isset($_POST['submit']) ) {
 		$form->messages[] = 'An invalid operation was selected.';
 	}
 	
-	if( empty($form->fields['data']) ) {
+	/* if( empty($form->fields['data']) ) {
 		$form->has_error = true;
 		$form->messages[] = 'The data field cannot be empty as it is required.';
-	}
+	} */
 	
 	if( !$form->has_error )
 	{
