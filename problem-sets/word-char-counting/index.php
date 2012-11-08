@@ -11,13 +11,19 @@ error_reporting(E_ALL | E_STRICT);
  * @param int Contains the position of the character to split on
  * @return array Returns an array of the initial word split into pieces
  */
-function _string_count_words_parse_pieces($piece, $offset, array &$ignore) {
+function _string_count_words_parse_pieces(array &$processed_data, $piece, $offset, array &$ignore) {
 	$return = array();
 	
 	$lhs = substr($piece, 0, $offset);
-	if( !in_array($lhs, $piece) ) {
+	if( !isset($processed_data['ignored'][$lhs]) ) {
 		$return[] = $lhs;
+		++$processed_data['total count while ignoring'];
 	}
+	else {
+		++$processed_data['ignored'][$lhs];
+	}
+	
+	++$processed_data['total count'];
 	
 	if( ($offset + 1) <= strlen($piece) ) {
 		$rhs = substr($piece, $offset + 1, strlen($piece));
@@ -28,7 +34,7 @@ function _string_count_words_parse_pieces($piece, $offset, array &$ignore) {
 				if( ($i + 1) < strlen($rhs) ) {
 					$return = array_merge(
 						$return,
-						_string_count_words_parse_pieces($rhs, $i, $ignore)
+						_string_count_words_parse_pieces($processed_data, $rhs, $i, $ignore)
 					);
 				}
 				
@@ -36,8 +42,16 @@ function _string_count_words_parse_pieces($piece, $offset, array &$ignore) {
 			}
 		}
 		
-		if( !$has_split && !in_array($rhs, $ignore) ) {
-			$return[] = $rhs;
+		if( !$has_split ) {
+			if( !isset($processed_data['ignored'][$rhs]) ) {
+				$return[] = $rhs;
+				++$processed_data['total count while ignoring'];
+			}
+			else {
+				++$processed_data['ignored'][$rhs];
+			}
+			
+			++$processed_data['total count'];
 		}
 	}
 	
@@ -48,9 +62,21 @@ function _string_count_words_validate_char($char) {
 	return !(!ctype_alpha($char) && ("'" != $char || '-' != $char));
 }
 
-function string_count_words($string, array $ignore = array()) {
+function string_count_words($string, array $ignore = array(), $return_array = false) {
 	if( !is_string($string) ) {
 		throw new Exception('$string parameter must be of type string.');
+	}
+	
+	$processed_data = array(
+		'total count' => 0,
+		'total count while ignoring' => 0,
+		'ignored' => array()
+	);
+	
+	if( !empty($ignore) ) {
+		foreach( $ignore as $k => &$v ) {
+			$processed_data['ignored'][$v] = 0;
+		}
 	}
 	
 	$pieces = explode(' ', $string);
@@ -61,19 +87,26 @@ function string_count_words($string, array $ignore = array()) {
 		
 		for( $i = 0; $i < strlen($piece) && !$has_split; ++$i ) {
 			if( !_string_count_words_validate_char($piece[$i]) ) {
-				$words = array_merge($words, _string_count_words_parse_pieces($piece, $i, $ignore));
+				$words = array_merge($words, _string_count_words_parse_pieces($processed_data, $piece, $i, $ignore));
 				$has_split = true;
 			}
 		}
 		
 		if( $is_valid && !$has_split ) {
-			if( !in_array($piece, $ignore) ) {
+			++$processed_data['total count'];
+			
+			if( !isset($processed_data['ignored'][$piece]) ) {
+				++$processed_data['total count while ignoring'];
+				
 				$words[] = $piece;
+			}
+			else {
+				++$processed_data['ignored'][$piece];
 			}
 		}
 	}
 	
-	return count($words);
+	return $return_array ? $processed_data : $processed_data['total count'];
 }
 
 /* print string_count_words("hello world") . '<br />';
@@ -126,7 +159,10 @@ if( isset($_POST['submit']) ) {
 		switch( strtolower($form->fields['op']) ) {
 			
 			case 'words':
-				$results->total_count = string_count_words($form->fields['data'], $ignored_values);
+				//$results->total_count = 
+				$processed_results = string_count_words($form->fields['data'], $ignored_values, true);
+				
+				print_r( $processed_results );
 				
 				break;
 			
