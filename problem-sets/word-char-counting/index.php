@@ -15,6 +15,7 @@ function _string_count_words_parse_pieces(array &$processed_data, $piece, $offse
 	$return = array();
 	
 	$lhs = substr($piece, 0, $offset);
+	
 	if( !isset($processed_data['ignored'][$lhs]) ) {
 		$return[] = $lhs;
 		++$processed_data['total count while ignoring'];
@@ -30,15 +31,16 @@ function _string_count_words_parse_pieces(array &$processed_data, $piece, $offse
 		
 		$has_split = false;
 		for( $i = 0; $i < strlen($rhs) && !$has_split; ++$i ) {
-			if( !_string_count_words_validate_char($rhs[$i]) ) {
-				if( ($i + 1) < strlen($rhs) ) {
-					$return = array_merge(
-						$return,
+			if( !_string_count_words_validate_char($rhs[$i]) )
+			{
+				$next = $i + 1;
+				if( isset($rhs[$next]) && _string_count_words_validate_char($rhs[$next]) )
+				{
+					$return = array_merge($return,
 						_string_count_words_parse_pieces($processed_data, $rhs, $i, $ignore)
 					);
+					$has_split = true;
 				}
-				
-				$has_split = true;
 			}
 		}
 		
@@ -59,7 +61,7 @@ function _string_count_words_parse_pieces(array &$processed_data, $piece, $offse
 }
 
 function _string_count_words_validate_char($char) {
-	return !(!ctype_alpha($char) && ("'" != $char || '-' != $char));
+	return !empty($char) && !(!ctype_alpha($char) && ("'" != $char || '-' != $char));
 }
 
 function string_count_words($string, array $ignore = array(), $return_array = false) {
@@ -86,9 +88,16 @@ function string_count_words($string, array $ignore = array(), $return_array = fa
 		$has_split = false;
 		
 		for( $i = 0; $i < strlen($piece) && !$has_split; ++$i ) {
+			$next = $i + 1;
 			if( !_string_count_words_validate_char($piece[$i]) ) {
-				$words = array_merge($words, _string_count_words_parse_pieces($processed_data, $piece, $i, $ignore));
-				$has_split = true;
+				if( isset($piece[$next]) && _string_count_words_validate_char($piece[$next]) ) {
+					$words = array_merge($words, _string_count_words_parse_pieces($processed_data, $piece, $i, $ignore));
+					$has_split = true;
+				}
+				else
+				{
+					$is_valid = false;
+				}
 			}
 		}
 		
