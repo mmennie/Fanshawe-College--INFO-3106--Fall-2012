@@ -11,10 +11,14 @@ error_reporting(E_ALL | E_STRICT);
  * @param int Contains the position of the character to split on
  * @return array Returns an array of the initial word split into pieces
  */
-function _string_count_words_parse_pieces($piece, $offset) {
+function _string_count_words_parse_pieces($piece, $offset, array &$ignore) {
 	$return = array();
-	$return[] = substr($piece, 0, $offset);
-
+	
+	$lhs = substr($piece, 0, $offset);
+	if( !in_array($lhs, $piece) ) {
+		$return[] = $lhs;
+	}
+	
 	if( ($offset + 1) <= strlen($piece) ) {
 		$rhs = substr($piece, $offset + 1, strlen($piece));
 		
@@ -24,7 +28,7 @@ function _string_count_words_parse_pieces($piece, $offset) {
 				if( ($i + 1) < strlen($rhs) ) {
 					$return = array_merge(
 						$return,
-						_string_count_words_parse_pieces($rhs, $i)
+						_string_count_words_parse_pieces($rhs, $i, $ignore)
 					);
 				}
 				
@@ -32,7 +36,7 @@ function _string_count_words_parse_pieces($piece, $offset) {
 			}
 		}
 		
-		if( !$has_split ) {
+		if( !$has_split && !in_array($rhs, $ignore) ) {
 			$return[] = $rhs;
 		}
 	}
@@ -44,7 +48,7 @@ function _string_count_words_validate_char($char) {
 	return !(!ctype_alpha($char) && ("'" != $char || '-' != $char));
 }
 
-function string_count_words($string) {
+function string_count_words($string, array $ignore = array()) {
 	if( !is_string($string) ) {
 		throw new Exception('$string parameter must be of type string.');
 	}
@@ -57,13 +61,15 @@ function string_count_words($string) {
 		
 		for( $i = 0; $i < strlen($piece) && !$has_split; ++$i ) {
 			if( !_string_count_words_validate_char($piece[$i]) ) {
-				$words = array_merge($words, _string_count_words_parse_pieces($piece, $i));
+				$words = array_merge($words, _string_count_words_parse_pieces($piece, $i, $ignore));
 				$has_split = true;
 			}
 		}
 		
 		if( $is_valid && !$has_split ) {
-			$words[] = $piece;
+			if( !in_array($piece, $ignore) ) {
+				$words[] = $piece;
+			}
 		}
 	}
 	
@@ -85,6 +91,12 @@ $form = (object) array(
 	'fields' => array('op' => 'word', 'data' => '', 'ignore' => '')
 );
 
+$results = (object) array(
+	'total_count' => 0,
+	'count_while_ignoring' => 0,
+	'ignored' => array()
+);
+
 if( isset($_POST['submit']) ) {
 	
 	$form->fields['op'] = isset($_POST['op']) ? stripslashes(trim($_POST['op'])) : '';
@@ -103,8 +115,33 @@ if( isset($_POST['submit']) ) {
 	
 	if( !$form->has_error )
 	{
-		/* do submission processing here ... */
+		if( !empty($form->fields['ignore']) ) {
+			$ignored_values = explode(',', $form->fields['ignore']);
+			$ignored_values = array_map('trim', $ignored_values);
+		}
+		else {
+			$ignored_values = array();
+		}
 		
+		switch( strtolower($form->fields['op']) ) {
+			
+			case 'words':
+				$results->total_count = string_count_words($form->fields['data'], $ignored_values);
+				
+				break;
+			
+			case 'chars':
+				break;
+			
+			default:
+				$form->has_error = true;
+				$form->messages[] = 'An unexpected error has occurred. Please try again.';
+				break;
+		}
+	}
+	
+	if( !$form->has_error )
+	{
 		$form->success = true;
 		$form->messages[] = 'Congrats! You have successfully submitted this form.';
 	}
@@ -136,6 +173,9 @@ if( isset($_POST['submit']) ) {
 	<div class="form-object" style="border: 1px solid #000; padding: 10px 10px; margin: 15px 0px;">
 		<?php print_r( $form ); ?>
 	</div>
+	<div class="results-object" style="border: 1px solid #000; padding: 10px 10px; margin: 15px 0px;">
+		<?php print_r( $results ); ?>
+	</div>
 
 <div class="wrapper">
 	<header id="header">
@@ -147,7 +187,7 @@ if( isset($_POST['submit']) ) {
 		<div class="success-messages">
 			<p><?php print implode('</p><p>', $form->messages); ?></p>
 		</div>
-		<p>The total number of items counted was: ##</p>
+		<p>The total number of items counted was: <?php print number_format($results->total_count); ?></p>
 		<p>The total number of items counted while ignoring the ignored values was: ##</p>
 		<table width="99%" border="0" cellpadding="0" cellspacing="0">
 			<thead>
