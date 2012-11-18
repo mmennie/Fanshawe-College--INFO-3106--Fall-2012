@@ -1,312 +1,304 @@
 <?php
-
-ini_set('display_errors', 'on');
+ini_set('display_errors','on');
 error_reporting(E_ALL | E_STRICT);
 
 /**
  * _string_count_words_parse_split
  * 
- * @access private
- * @param string Contains the word or piece of a word to split
+ * @access private 
+ * @param string Contains the word or piece of word to split
  * @param int Contains the position of the character to split on
  * @return array Returns an array of the initial word split into pieces
  */
-function _string_count_words_parse_pieces(array &$processed_data, $piece, $offset, array &$ignore) {
+ 
+function _string_count_words_parse_pieces($piece, $offset) {
 	$return = array();
+	$return[] = substr($piece, 0, $offset);
 	
-	$lhs = substr($piece, 0, $offset);
+	if( ($offset +1) <= strlen($piece) ) {
 	
-	if( !isset($processed_data['ignored'][$lhs]) ) {
-		$return[] = $lhs;
-		++$processed_data['total count while ignoring'];
-	}
-	else {
-		++$processed_data['ignored'][$lhs];
-	}
-	
-	++$processed_data['total count'];
-	
-	if( ($offset + 1) <= strlen($piece) ) {
 		$rhs = substr($piece, $offset + 1, strlen($piece));
-		
 		$has_split = false;
-		for( $i = 0; $i < strlen($rhs) && !$has_split; ++$i ) {
-			if( !_string_count_words_validate_char($rhs[$i]) )
-			{
-				$next = $i + 1;
-				if( isset($rhs[$next]) && _string_count_words_validate_char($rhs[$next]) )
-				{
-					$return = array_merge($return,
-						_string_count_words_parse_pieces($processed_data, $rhs, $i, $ignore)
-					);
-					$has_split = true;
-				}
-			}
-		}
 		
-		if( !$has_split ) {
-			if( !isset($processed_data['ignored'][$rhs]) ) {
-				$return[] = $rhs;
-				++$processed_data['total count while ignoring'];
-			}
-			else {
-				++$processed_data['ignored'][$rhs];
-			}
+			for( $i = 0; $i < strlen($rhs) && !$has_split; ++$i) {
+				if( !_string_count_words_validate_char($rhs[$i]) ) {
+					if( ($i + 1) <= strlen($rhs) ) {////////////////////////////MINE!
+						$return = array_merge(
+							$return, 
+							_string_count_words_parse_pieces($rhs, $i)
+						);
+					}//end if
+					$has_split = true;
+				}//end if
+				
+			}//end for
 			
-			++$processed_data['total count'];
-		}
-	}
+			if( !$has_split ) {
+				$return[] = $rhs;
+			}//end if
+			
+	}//end if
+		return $return;
+}//end string_count_words_parse_split() function
+
+function _string_validate_ignored_words($ignore, $data) {
+	$ignoreCount = array();
+	$wordCount = array();
 	
-	return $return;
-}
+	for( $i = 0; $i < count($data); ++$i ) {
+		for( $j = 0; $j < count($ignore); ++$j ) {
+			if( $ignore[$j] === $data[$i] ) {
+				$ignoreCount[] = $data[$i];
+				//++&$processed_data;
+				if( $data[$i] = null ) {
+					++$i;
+				}//end inner if
+			}//end inner if
+
+		}//end inner for
+		if($data[$i] != null) {
+			$wordCount[] = $data[$i];
+		}
+
+	}//end for
+	
+	return ($wordCount);
+	//return $wordCount[];
+}//end _string_validate_ignore_word() function
 
 function _string_count_words_validate_char($char) {
-	return !empty($char) && !(!ctype_alpha($char) && ("'" != $char || '-' != $char));
-}
+	return !(!ctype_alpha($char) && ("'" != $char || '-' != $char));
+}//end _string_count_words_validate_char() function
 
-function _string_count_words_sanitize_piece($value) {
-	$value = trim($value);
-	return empty($value) ? null : $value;
-}
-
-function string_count_words($string, array $ignore = array(), $return_array = false) {
+function string_valid_words($string) {
+	
 	if( !is_string($string) ) {
-		throw new Exception('$string parameter must be of type string.');
-	}
-	
-	$processed_data = array(
-		'total count' => 0,
-		'total count while ignoring' => 0,
-		'ignored' => array()
-	);
-	
-	if( !empty($ignore) ) {
-		foreach( $ignore as $k => &$v ) {
-			$processed_data['ignored'][$v] = 0;
-		}
-	}
+		throw new Exception('parameter must be of type string.');
+	}//end if
 	
 	$pieces = explode(' ', $string);
-	for( $i = 0, $pieces_size = count($pieces); $i < $pieces_size; ++$i ) {
-		$pieces[$i] = _string_count_words_sanitize_piece($pieces[$i]);
-		if( null === $pieces[$i] ) {
-			unset($pieces[$i]);
-		}
-	}
-	
 	$words = array();
+	
 	foreach( $pieces as $piece ) {
+	$implode = array();
 		$is_valid = true;
 		$has_split = false;
-		
+		//print_r ($piece) . print '<br />';
 		for( $i = 0; $i < strlen($piece) && !$has_split; ++$i ) {
-			$next = $i + 1;
 			if( !_string_count_words_validate_char($piece[$i]) ) {
-				if( isset($piece[$next]) && _string_count_words_validate_char($piece[$next]) ) {
-					$words = array_merge($words, _string_count_words_parse_pieces($processed_data, $piece, $i, $ignore));
-					$has_split = true;
-				}
-				else
-				{
-					$is_valid = false;
-				}
-			}
-		}
-		
-		if( $is_valid && !$has_split ) {
-			++$processed_data['total count'];
-			
-			if( !isset($processed_data['ignored'][$piece]) ) {
-				++$processed_data['total count while ignoring'];
 				
-				$words[] = $piece;
-			}
-			else {
-				++$processed_data['ignored'][$piece];
-			}
-		}
-	}
-	
-	return $return_array ? $processed_data : $processed_data['total count'];
-}
+				$implode = array_merge($implode,
+					_string_count_words_parse_pieces($piece, $i)
+				);
+				
+				if(implode($implode) != null ) {
+					$words[] = implode($implode);
+				}
+				
+				$has_split = true;
+			}//end if
+		}//end for
+		if( $is_valid && !$has_split && $piece != null ) {
+			$words[] = $piece;
+		}//end if
+	}//end foreach
 
-/* print string_count_words("hello world") . '<br />';
-print string_count_words("hello world bye world") . '<br />';
-print string_count_words("hello wo3rld") . '<br />';
-print string_count_words("hello world, bye wor,ld") . '<br />';
-print string_count_words("he3l4lo w1or2ld b6ye w4o!rl4d") . '<br />';
-print string_count_words("w4o!rl4dasdfasdf") . '<br />'; */
+	return ($words);
+}//end string_count_words() function
+ 
+function string_valid_ignored_words($string) {
+	
+	if( !is_string($string) ) {
+		throw new Exception('parameter must be of type string.');
+	}//end if
+	
+	$pieces = explode(',', $string);
+	$words = array();
+	
+	foreach( $pieces as $piece ) {
+	$implode = array();
+		$is_valid = true;
+		$has_split = false;
+
+		for( $i = 0; $i < strlen($piece) && !$has_split; ++$i ) {
+			if( !_string_count_words_validate_char($piece[$i]) ) {
+				
+				$implode = array_merge($implode,
+					_string_count_words_parse_pieces($piece, $i)
+				);
+				
+				if(implode($implode) != null ) {
+					$words[] = implode($implode);
+				}
+				$has_split = true;
+
+				
+			}//end if
+		}//end for
+		if( $is_valid && !$has_split && $piece != null ) {
+			$words[] = $piece;
+			//print_r ($words);
+		}//end if
+		
+	}//end foreach
+	return ($words);
+}//end string_count_words() function
 
 $form = (object) array(
-	'has_error' => false,
-	'success' => false,
-	'messages' => array(),
-	
-	'fields' => array('op' => 'word', 'data' => '', 'ignore' => '')
-);
-
-$results = (object) array(
-	'total_count' => 0,
-	'count_while_ignoring' => 0,
-	'ignored' => array()
-);
+		'has_error' => false,
+		'success' => false,
+		'messages' => array(),
+		'fields' => array('op' => 'word', 'data' => '', 'ignore' => '')
+	);
 
 if( isset($_POST['submit']) ) {
+	// do submission processing here ...
 	
 	$form->fields['op'] = isset($_POST['op']) ? stripslashes(trim($_POST['op'])) : '';
 	$form->fields['data'] = isset($_POST['data']) ? stripslashes(strip_tags(trim($_POST['data']))) : '';
 	$form->fields['ignore'] = isset($_POST['ignore']) ? stripslashes(strip_tags(trim($_POST['ignore']))) : '';
-
-	if( 'words' != $form->fields['op'] && 'chars' != $form->fields['op'] ) {
-		$form->has_error = true;
-		$form->messages[] = 'An invalid operation was selected.';
-	}
 	
-	/* if( empty($form->fields['data']) ) {
+	if( 'word' != $form->fields['op'] && 'char' != $form->fields['op'] ) {
+		$form->has_error = true;
+		$form->messages[] = 'An invalid operation was selected';
+	}//end if
+	if( empty ($form->fields['data']) ) {
 		$form->has_error = true;
 		$form->messages[] = 'The data field cannot be empty as it is required.';
-	} */
+	}//end if
 	
-	if( !$form->has_error )
-	{
-		if( !empty($form->fields['ignore']) ) {
-			$ignored_values = explode(',', $form->fields['ignore']);
-			$ignored_values = array_map('trim', $ignored_values);
-		}
-		else {
-			$ignored_values = array();
-		}
+	if( !$form->has_error ) {
 		
 		switch( strtolower($form->fields['op']) ) {
 			
-			case 'words':
-				//$results->total_count = 
-				$processed_results = string_count_words($form->fields['data'], $ignored_values, true);
+			case 'word':
+				$dataArray = string_valid_words($form->fields['data']);
 				
-				print_r( $processed_results );
+				$ignoreArray = string_valid_ignored_words($form->fields['ignore']);
+				
+				$ignoredValues = _string_validate_ignored_words($ignoreArray, $dataArray);
+				
+				$occurrence = 0;
+				$occurrence = (count($dataArray)-count($ignoredValues));
+				break;
+				
+			case 'char':
+				$characters = implode(string_valid_words($form->fields['data']));
+				print_r ($characters);
+				$dataArray = strlen($characters);
+				print $dataArray . '<br />';
+				$ignoreArray = string_valid_ignored_words($form->fields['ignore']);
+				
+				
 				
 				break;
-			
-			case 'chars':
+				
+			default :
+			$form->has_error = true;
+			$form->messages[] = 'An unexpected error has occurred. Please try again.';
 				break;
-			
-			default:
-				$form->has_error = true;
-				$form->messages[] = 'An unexpected error has occurred. Please try again.';
-				break;
-		}
-	}
-	
-	if( !$form->has_error )
-	{
+		}//end switch
+	}//end if
+		
+	if( !$form->has_error ) {	
 		$form->success = true;
-		$form->messages[] = 'Congrats! You have successfully submitted this form.';
-	}
-}
+		$form->messages[] = 'Form Passed!';
+	}//end if	
+	
+}//end if
 
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
 	<title>Word and Character Counting</title>
+	
 	<style>
-	html { background-color: #f2f2f2; font-family: "Helvetica", Arial, sans-serif; font-size: 13px; color: #333; }
-	
-	h1 { margin: 0px 0px; }
-	label { display: block; font-weight: bold; }
-	
-	.wrapper { width: 600px; margin-left: auto; margin-right: auto; margin-top: 30px; margin-bottom: 30px; background-color: #fff; border: 1px solid #e2e2e2; padding: 24px 24px; }
-	
-	.error-messages { background: #ff0000; padding: 5px 15px; color: #fff; }
-	
-	.success-messages { background: #000; padding: 5px 15px; color: #fff; }
+		body { background-color: #f2f2f2; font-family: "Helvetica", Arial, sans-serif; font-size: 13px; color: #333; }
+		
+		footer { clear: both; padding-top: 30px; height: 15px;}
+		
+		h1 { margin: 0px 0px; }
+		label { display: block; font-weight: bold; }
+		
+		.wrap { width: 600px; margin: 30px auto 30px auto; background-color: #fff; border: 1px solid #e2e2e2; padding: 20px 20px; 
+				border-radius: 25px; }
+				
+		.error-messages { background: #ff0000; padding: 1px 5px; color: #fff; border-radius: 10px;}
+		
+		.success-messages { background: #000; padding: 1px 15px; color: #fff; border-radius: 10px;}
 	</style>
 </head>
+
 <body>
 
-	<div class="post-array" style="border: 1px solid #000; padding: 10px 10px; margin: 15px 0px;">
-		<?php print_r( $_POST ); ?>
-	</div>
-	<div class="form-object" style="border: 1px solid #000; padding: 10px 10px; margin: 15px 0px;">
-		<?php print_r( $form ); ?>
-	</div>
-	<div class="results-object" style="border: 1px solid #000; padding: 10px 10px; margin: 15px 0px;">
-		<?php print_r( $results ); ?>
-	</div>
-
-<div class="wrapper">
+<div class="wrap">
 	<header id="header">
-		<h1>Counting</h1>
+	<h1>Counting</h1>
 	</header>
 	<section id="main">
 	<?php if( $form->success ) : ?>
-		
 		<div class="success-messages">
-			<p><?php print implode('</p><p>', $form->messages); ?></p>
+			<p><?php print implode('</p><p>', $form->messages); ?>
+			</p>
 		</div>
-		<p>The total number of items counted was: <?php print number_format($results->total_count); ?></p>
-		<p>The total number of items counted while ignoring the ignored values was: ##</p>
+		<p>The total number of items counted was: <?php print count($dataArray); ?></p>
+		<p>The total number of items counted while ignoring the ingored values was: <?php  $ignoredValues!=null ? print count($ignoredValues) : print 'null' ?></p>
+		
 		<table width="99%" border="0" cellpadding="0" cellspacing="0">
 			<thead>
 				<tr>
-					<th width="75%">Ignored Value</th>
+					<th width="75%">Ignored Value(s)</th>
 					<th width="25%">Count</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
-					<td>My ignored value here</td>
-					<td>123</td>
-				</tr>
+					<td><em><?php $_POST['ignore']!=null ? print $_POST['ignore'] : print 'no value entered'; ?></em></td>
+					<td>#&nbsp&nbsp&nbsp&nbsp&nbsp <em><?php print $occurrence ?></em></td>
+				</td>
 			</tbody>
 		</table>
+		
 		<p><a href="index.php">&larr; Back</a></p>
 		
 	<?php else : ?>
 		<?php if( $form->has_error ) : ?>
 		<div class="error-messages">
-			<p><?php print implode('</p><p>', $form->messages); ?></p>
+			<p><?php print implode('<p></p>', $form->messages); ?></p>
 		</div>
 		<?php endif; ?>
-		<form action="index.php" method="post">
-		<p>
-			<label for="ops">Operation Method: *</label>
-			<select name="op" id="ops">
-				<option value="words"<?php print 'words' == $form->fields['op'] ? ' selected="selected"' : ''; ?>>Word Counting</option>
-				<option value="chars"<?php print 'chars' == $form->fields['op'] ? ' selected="selected"' : ''; ?>>Character Counting</option>
-			</select>
-		</p>
-		<p>
-			<label for="data">String: *</label>
-			<textarea id="data" name="data" cols="12" rows="8" style="width: 95%;"><?php print $form->fields['data']; ?></textarea>
-		</p>
-		<p>
-			<label for="ignore">Ignore:</label>
-			<input type="text" name="ignore" id="ignored" value="<?php print $form->fields['ignore']; ?>" />
-		</p>
-		<p>
-			<input type="submit" value="Submit" name="submit" />
-		</p>
-		</form>
-	<?php endif; ?>	
+			<form action="index.php" method="post">
+			<p>
+				<label for="ops">Operation Method: *</label>
+				<select name="op" id="ops">
+					<option value="word"<?php print 'word' == $form->fields['op'] ? ' selected="selected"' : ''; ?>>Word Counting</option>
+					<option value="char"<?php print 'char' == $form->fields['op'] ? ' selected="selected"' : ''; ?>>Character Counting</option>
+				</select>
+			</p>
+			<p>
+				<label for="data">Text: *</label>
+				<textarea id="data" name="data" cols="12" rows="8" style="width: 95%;"><?php print $form->fields['data']; ?></textarea>
+			</p>
+			<p>
+				<label for="ignore">Ignore:</label>
+				<input type="text" name="ignore" id="ignored" value="<?php print $form->fields['ignore']; ?>" />
+			</p>
+			<p>
+				<input type="submit" value="Submit" name="submit" />
+			</p>
+			</form>
+	<?php endif; ?>		
 	</section>
 	<footer id="footer">
-		<p>Copyright information here.</p>
+		<p>&copy Copyright Jeremy Mills</p>
 	</footer>
 
-</div>
+
+</div><!--end wrap div-->
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
 
 
