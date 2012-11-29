@@ -5,6 +5,9 @@ error_reporting(E_ALL | E_STRICT);
 
 define('ROOT_PATH', dirname(__FILE__) . DIRECTORY_SEPARATOR);
 define('FILES_PATH', ROOT_PATH . 'files' . DIRECTORY_SEPARATOR);
+define('FILES_TMP_PATH', FILES_PATH . 'tmp' . DIRECTORY_SEPARATOR);
+
+ini_set('upload_tmp_dir', FILES_TMP_PATH);
 
 if( !defined('UPLOAD_ERR_EMPTY') )
 {
